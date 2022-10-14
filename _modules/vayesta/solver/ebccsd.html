@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.solver.ebccsd &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../vayesta.html">vayesta</a> &raquo;</li>
+          <li><a href="../solver.html">vayesta.solver</a> &raquo;</li>
+      <li>vayesta.solver.ebccsd</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.solver.ebccsd</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dataclasses</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># FCI_Solver has infrastructure we require to obtain effective cluster Hamiltonian.</span>
+<span class="kn">from</span> <span class="nn">.solver</span> <span class="kn">import</span> <span class="n">EBClusterSolver</span>
+
+
+<div class="viewcode-block" id="EBCCSD_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver">[docs]</a><span class="k">class</span> <span class="nc">EBCCSD_Solver</span><span class="p">(</span><span class="n">EBClusterSolver</span><span class="p">):</span>
+<div class="viewcode-block" id="EBCCSD_Solver.Options"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.Options">[docs]</a>    <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+    <span class="k">class</span> <span class="nc">Options</span><span class="p">(</span><span class="n">EBClusterSolver</span><span class="o">.</span><span class="n">Options</span><span class="p">):</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">ebcc</span> <span class="kn">import</span> <span class="n">ebccsd</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Cannot find ebcc; required to use EBCCSD solver.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ncas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">norb_active</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nelec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nbos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">nbos</span>
+
+<div class="viewcode-block" id="EBCCSD_Solver.get_eris"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.get_eris">[docs]</a>    <span class="k">def</span> <span class="nf">get_eris</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for AO-&gt;MO of ERIs:  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_eris_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">eris</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.get_input"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.get_input">[docs]</a>    <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eris</span><span class="p">()</span>
+        <span class="n">f_act</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_fock</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">f_act</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span>
+        <span class="n">couplings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">couplings</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">polaritonic_shift</span><span class="p">:</span>
+            <span class="n">fock_shift</span><span class="p">,</span> <span class="n">coupling_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polaritonic_shift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">bos_freqs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">couplings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">fock_shift</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fock_shift</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Polaritonic shift breaks cluster spin symmetry; please either use an unrestricted&quot;</span>
+                                  <span class="s2">&quot;formalism or bosons without polaritonic shift.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span>
+            <span class="n">f_act</span> <span class="o">=</span> <span class="n">f_act</span> <span class="o">+</span> <span class="n">fock_shift</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">couplings</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">couplings</span><span class="p">,</span> <span class="n">coupling_shift</span><span class="p">)])</span>
+
+        <span class="k">return</span> <span class="p">((</span><span class="n">f_act</span><span class="p">,</span> <span class="n">f_act</span><span class="p">),</span> <span class="p">(</span><span class="n">eris</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="n">eris</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">),</span>
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">)),</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">couplings</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.kernel"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run FCI kernel.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">ebcc</span> <span class="kn">import</span> <span class="n">ebccsd</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+        <span class="c1"># This interface handles all conversion into GHF quantities for us.</span>
+        <span class="c1"># [TODO] Double check if we need this transpose in the couplings.</span>
+        <span class="c1">#  EBCC expects the annihilation term but may also swap the indexing of fermionic operators...</span>
+        <span class="n">inp</span><span class="p">,</span> <span class="n">couplings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input</span><span class="p">(</span><span class="n">eris</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">ebccsd</span><span class="o">.</span><span class="n">EBCCSD</span><span class="o">.</span><span class="n">fromUHFarrays</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span>
+                                                  <span class="n">gmat</span><span class="o">=</span><span class="n">couplings</span><span class="p">,</span>
+                                                  <span class="n">omega</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">bos_freqs</span><span class="p">,</span>
+                                                  <span class="n">rank</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">autogen_code</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">solve_lambda</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">(</span><span class="s2">&quot;Time for EBCCSD: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">time_string</span><span class="p">(</span><span class="n">timer</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debugv</span><span class="p">(</span><span class="s2">&quot;E_corr(CAS)= </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">energy_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_corr</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">converged_t</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">converged_l</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.get_ghf_to_uhf_indices"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.get_ghf_to_uhf_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_ghf_to_uhf_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">no</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span>
+        <span class="n">nv</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span>
+        <span class="n">nso</span> <span class="o">=</span> <span class="n">no</span> <span class="o">+</span> <span class="n">nv</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nso</span><span class="p">)]</span>
+        <span class="n">aindx</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="n">no</span><span class="p">:</span><span class="n">no</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">]</span>
+        <span class="n">bindx</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">:</span><span class="n">no</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="n">no</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.make_rdm1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.make_rdm1">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is in GHF orbital ordering.</span>
+        <span class="n">ghf_dm1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_1rdm_f</span><span class="p">()</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="c1"># Want RHF spatial dm1.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm1</span> <span class="o">=</span> <span class="n">ghf_dm1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">)]</span> <span class="o">+</span> <span class="n">ghf_dm1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm1</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.make_rdm2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.make_rdm2">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is in GHF orbital ordering.</span>
+        <span class="n">ghf_dm2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_2rdm_f</span><span class="p">()</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm2</span> <span class="o">=</span> <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">)]</span> <span class="o">+</span> <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)]</span> <span class="o">+</span> \
+                   <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)]</span> <span class="o">+</span> <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm2</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.make_rdm12"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.make_rdm12">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm12</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm2</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.make_dd_moms"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.make_dd_moms">[docs]</a>    <span class="k">def</span> <span class="nf">make_dd_moms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_mom</span><span class="p">,</span> <span class="n">coeffs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">dd_moms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_dd_EOM_moms</span><span class="p">(</span><span class="n">max_mom</span><span class="p">,</span> <span class="n">include_ref_proj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">coeffs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ca</span> <span class="o">=</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">coeffs</span>
+        <span class="n">dd_moms</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">dd_moms</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">])][:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                       <span class="n">dd_moms</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">])][:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                       <span class="n">dd_moms</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">])][:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dd_moms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">])}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ijkl,ip,jq,kr,ls-&gt;pqrs&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">),</span>
+                    <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ijkl,ip,jq,kr,ls-&gt;pqrs&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">),</span>
+                    <span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ijkl,ip,jq,kr,ls-&gt;pqrs&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dd_moms</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span></div>
+
+<div class="viewcode-block" id="EBCCSD_Solver.make_rdm_eb"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.EBCCSD_Solver.make_rdm_eb">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm_eb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;P[p,q,b] corresponds to &lt;0|b^+ p^+ q|0&gt;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># This is in GHF orbital ordering, and returns both bosonic creation and annihilation.</span>
+        <span class="n">dm_eb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_eb_coup_rdm</span><span class="p">(</span><span class="n">unshifted_bos</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="c1"># Check that the density matrices from CC obey this relation; if not we probably need to average, but want to</span>
+        <span class="c1"># know.</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">dm_eb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dm_eb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="n">dm_eb_crea</span> <span class="o">=</span> <span class="n">dm_eb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm_eb</span> <span class="o">=</span> <span class="p">(</span><span class="n">dm_eb_crea</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbos</span><span class="p">)))],</span>
+                      <span class="n">dm_eb_crea</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbos</span><span class="p">)))])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">polaritonic_shift</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm_eb</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_eb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eb_dm_polaritonic_shift</span><span class="p">())]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_eb</span></div></div>
+
+
+<div class="viewcode-block" id="UEBCCSD_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver">[docs]</a><span class="k">class</span> <span class="nc">UEBCCSD_Solver</span><span class="p">(</span><span class="n">EBCCSD_Solver</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UEBCCSD_Solver.get_eris"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver.get_eris">[docs]</a>    <span class="k">def</span> <span class="nf">get_eris</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">c_act</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for AO-&gt;MO of ERIs:  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">eris_aa</span><span class="p">,</span> <span class="n">eris_ab</span><span class="p">,</span> <span class="n">eris_bb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_eris_array_uhf</span><span class="p">(</span><span class="n">c_act</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">eris_aa</span><span class="p">,</span> <span class="n">eris_ab</span><span class="p">,</span> <span class="n">eris_bb</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UEBCCSD_Solver.get_input"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver.get_input">[docs]</a>    <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eris</span><span class="p">()</span>
+        <span class="n">fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_fock</span><span class="p">()</span>
+        <span class="n">f_act</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">fock</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">couplings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">couplings</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">polaritonic_shift</span><span class="p">:</span>
+            <span class="n">fock_shift</span><span class="p">,</span> <span class="n">coupling_shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_polaritonic_shift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">bos_freqs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment</span><span class="o">.</span><span class="n">couplings</span><span class="p">)</span>
+            <span class="n">f_act</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f_act</span><span class="p">,</span> <span class="n">fock_shift</span><span class="p">)])</span>
+            <span class="n">couplings</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">couplings</span><span class="p">,</span> <span class="n">coupling_shift</span><span class="p">)])</span>
+            <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+               <span class="n">f_act</span> <span class="o">=</span> <span class="p">((</span><span class="n">f_act</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                         <span class="p">(</span><span class="n">f_act</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">f_act</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">),</span> \
+               <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">couplings</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="UEBCCSD_Solver.get_ghf_to_uhf_indices"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver.get_ghf_to_uhf_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_ghf_to_uhf_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">no</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">)</span>
+        <span class="n">nv</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">)</span>
+        <span class="n">nso</span> <span class="o">=</span> <span class="n">no</span> <span class="o">+</span> <span class="n">nv</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nso</span><span class="p">)]</span>
+        <span class="n">aindx</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="n">no</span><span class="p">:</span><span class="n">no</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">bindx</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">no</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="n">no</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nvir_active</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]</span>
+        <span class="k">return</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span></div>
+
+<div class="viewcode-block" id="UEBCCSD_Solver.make_rdm1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver.make_rdm1">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is in GHF orbital ordering.</span>
+        <span class="n">ghf_dm1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_1rdm_f</span><span class="p">()</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="c1"># Want UHF spin dm1.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm1</span> <span class="o">=</span> <span class="p">(</span><span class="n">ghf_dm1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">)],</span> <span class="n">ghf_dm1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm1</span></div>
+
+<div class="viewcode-block" id="UEBCCSD_Solver.make_rdm2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.ebccsd.UEBCCSD_Solver.make_rdm2">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is in GHF orbital ordering.</span>
+        <span class="n">ghf_dm2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">make_2rdm_f</span><span class="p">()</span>
+        <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ghf_to_uhf_indices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dm2</span> <span class="o">=</span> <span class="p">(</span><span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">)],</span> <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aindx</span><span class="p">,</span> <span class="n">aindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)],</span>
+                    <span class="n">ghf_dm2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">,</span> <span class="n">bindx</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm2</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

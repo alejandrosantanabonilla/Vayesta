@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.solver.cisd &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../vayesta.html">vayesta</a> &raquo;</li>
+          <li><a href="../solver.html">vayesta.solver</a> &raquo;</li>
+      <li>vayesta.solver.cisd</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.solver.cisd</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pyscf</span>
+<span class="kn">import</span> <span class="nn">pyscf.ci</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.types</span> <span class="kn">import</span> <span class="n">WaveFunction</span>
+<span class="kn">from</span> <span class="nn">.ccsd</span> <span class="kn">import</span> <span class="n">CCSD_Solver</span>
+<span class="kn">from</span> <span class="nn">.solver</span> <span class="kn">import</span> <span class="n">ClusterSolver</span>
+
+
+<div class="viewcode-block" id="CISD_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver">[docs]</a><span class="k">class</span> <span class="nc">CISD_Solver</span><span class="p">(</span><span class="n">CCSD_Solver</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">civec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c0</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="kc">None</span>      <span class="c1"># In intermediate normalization!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="kc">None</span>      <span class="c1"># In intermediate normalization!</span>
+
+<div class="viewcode-block" id="CISD_Solver.kernel"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="c1"># Integral transformation</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eris</span><span class="p">()</span>
+
+        <span class="c1"># Add additional potential</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debugv</span><span class="p">(</span><span class="s2">&quot;Adding self.v_ext to eris.fock&quot;</span><span class="p">)</span>
+            <span class="c1"># Make sure there are no side effects:</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">eris</span><span class="p">)</span>
+            <span class="c1"># Replace fock instead of modifying it!</span>
+            <span class="n">eris</span><span class="o">.</span><span class="n">fock</span> <span class="o">=</span> <span class="p">(</span><span class="n">eris</span><span class="o">.</span><span class="n">fock</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ext</span><span class="p">)</span>
+        <span class="c1">#self.log.debugv(&quot;sum(eris.mo_energy)= %.8e&quot;, sum(eris.mo_energy))</span>
+        <span class="c1">#self.log.debugv(&quot;Tr(eris.fock)= %.8e&quot;, np.trace(eris.fock))</span>
+
+        <span class="c1"># Tailored CC</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for CISD: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="c1">#self.log.info(&quot;Solving CISD-equations %s initial guess...&quot;, &quot;with&quot; if (t2 is not None) else &quot;without&quot;)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solving CISD-equations&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">eris</span><span class="o">=</span><span class="n">eris</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not converged!&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debugv</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> converged.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">e_corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">e_corr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">converged</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cluster: E(corr)= </span><span class="si">% 16.8f</span><span class="s2"> Ha&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">e_corr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">civec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">ci</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">cisdvec_to_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">civec</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span> <span class="o">=</span> <span class="n">WaveFunction</span><span class="o">.</span><span class="n">from_pyscf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_solver_class"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_solver_class">[docs]</a>    <span class="k">def</span> <span class="nf">get_solver_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># No DF version for CISD</span>
+        <span class="k">return</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ci</span><span class="o">.</span><span class="n">cisd</span><span class="o">.</span><span class="n">CISD</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_t1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_t1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_c1</span><span class="p">(</span><span class="n">intermed_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_t2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_t2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_t2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2</span> <span class="o">-</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ia,jb-&gt;ijab&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1</span><span class="p">))</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c0</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_c1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_c1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c0</span> <span class="k">if</span> <span class="n">intermed_norm</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c1</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_c2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_c2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c0</span> <span class="k">if</span> <span class="n">intermed_norm</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c2</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_l1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_l1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_l1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_l2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_l2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_l2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.get_init_guess"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.get_init_guess">[docs]</a>    <span class="k">def</span> <span class="nf">get_init_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;c0&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c0</span><span class="p">,</span> <span class="s1">&#39;c1&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1</span> <span class="p">,</span> <span class="s1">&#39;c2&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c2</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.make_rdm1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.make_rdm1">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CISD_Solver.make_rdm2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.CISD_Solver.make_rdm2">[docs]</a>    <span class="k">def</span> <span class="nf">make_rdm2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="UCISD_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.UCISD_Solver">[docs]</a><span class="k">class</span> <span class="nc">UCISD_Solver</span><span class="p">(</span><span class="n">CISD_Solver</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UCISD_Solver.get_solver_class"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.UCISD_Solver.get_solver_class">[docs]</a>    <span class="k">def</span> <span class="nf">get_solver_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># No DF version for UCISD</span>
+        <span class="k">return</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ci</span><span class="o">.</span><span class="n">ucisd</span><span class="o">.</span><span class="n">UCISD</span></div>
+
+<div class="viewcode-block" id="UCISD_Solver.get_t2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.UCISD_Solver.get_t2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_t2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_c1</span><span class="p">(</span><span class="n">intermed_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">caa</span><span class="p">,</span> <span class="n">cab</span><span class="p">,</span> <span class="n">cbb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_c2</span><span class="p">(</span><span class="n">intermed_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">taa</span> <span class="o">=</span> <span class="n">caa</span> <span class="o">-</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ia,jb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">)</span> <span class="o">+</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ib,ja-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">ca</span><span class="p">)</span>
+        <span class="n">tbb</span> <span class="o">=</span> <span class="n">cbb</span> <span class="o">-</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ia,jb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">)</span> <span class="o">+</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ib,ja-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cb</span><span class="p">)</span>
+        <span class="n">tab</span> <span class="o">=</span> <span class="n">cab</span> <span class="o">-</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ia,jb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">taa</span><span class="p">,</span> <span class="n">tab</span><span class="p">,</span> <span class="n">tbb</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UCISD_Solver.get_c1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.UCISD_Solver.get_c1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c0</span> <span class="k">if</span> <span class="n">intermed_norm</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="UCISD_Solver.get_c2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.cisd.UCISD_Solver.get_c2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">c0</span> <span class="k">if</span> <span class="n">intermed_norm</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">norm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

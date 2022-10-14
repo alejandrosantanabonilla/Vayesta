@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.solver.mp2 &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../vayesta.html">vayesta</a> &raquo;</li>
+          <li><a href="../solver.html">vayesta.solver</a> &raquo;</li>
+      <li>vayesta.solver.mp2</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.solver.mp2</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.solver</span> <span class="kn">import</span> <span class="n">ClusterSolver</span>
+
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.types</span> <span class="kn">import</span> <span class="n">Orbitals</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.types</span> <span class="kn">import</span> <span class="n">MP2_WaveFunction</span>
+
+<div class="viewcode-block" id="MP2_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver">[docs]</a><span class="k">class</span> <span class="nc">MP2_Solver</span><span class="p">(</span><span class="n">ClusterSolver</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">frozen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">get_frozen_indices</span><span class="p">()</span>
+        <span class="c1"># --- Results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t2</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MP2_Solver.reset"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t2</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_t1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_t1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#return np.zeros((self.cluster.nocc_active, self.cluster.nvir_active))</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_c1"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_c1">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="c1">#return self.get_t1()</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_t2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_t2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_t2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">t2</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_c2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_c2">[docs]</a>    <span class="nd">@deprecated</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_c2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intermed_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;C2 in intermediate normalization.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intermed_norm</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">t2</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_eris"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_eris">[docs]</a>    <span class="k">def</span> <span class="nf">get_eris</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We only need the (ov|ov) block for MP2:</span>
+        <span class="n">mo_coeff</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_occ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_vir</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for 2e-integral transformation: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_eris_array</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">eris</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_cderi"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_cderi">[docs]</a>    <span class="k">def</span> <span class="nf">get_cderi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We only need the (L|ov) block for MP2:</span>
+        <span class="n">mo_coeff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_occ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_vir</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for 2e-integral transformation: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">cderi</span><span class="p">,</span> <span class="n">cderi_neg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_cderi</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cderi</span><span class="p">,</span> <span class="n">cderi_neg</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.get_mo_energy"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.get_mo_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_mo_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fock</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_fock</span><span class="p">()</span>
+        <span class="n">c_act</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span>
+        <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ai,ab,bi-&gt;i&#39;</span><span class="p">,</span> <span class="n">c_act</span><span class="p">,</span> <span class="n">fock</span><span class="p">,</span> <span class="n">c_act</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mo_energy</span></div>
+
+<div class="viewcode-block" id="MP2_Solver.make_t2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.make_t2">[docs]</a>    <span class="k">def</span> <span class="nf">make_t2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cderi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">blksize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make T2 amplitudes&quot;&quot;&quot;</span>
+        <span class="c1"># (ov|ov)</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debugv</span><span class="p">(</span><span class="s2">&quot;Making T2 amplitudes from ERIs&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">eris</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span> <span class="o">=</span> <span class="n">eris</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># (L|ov)</span>
+        <span class="k">elif</span> <span class="n">cderi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debugv</span><span class="p">(</span><span class="s2">&quot;Making T2 amplitudes from CD-ERIs&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">cderi</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">cderi_neg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cderi_neg</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span> <span class="o">=</span> <span class="n">cderi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nocc</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span><span class="p">,</span> <span class="n">nvir</span><span class="p">))</span>
+        <span class="n">eia</span> <span class="o">=</span> <span class="p">(</span><span class="n">mo_energy</span><span class="p">[:</span><span class="n">nocc</span><span class="p">,</span><span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">mo_energy</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="n">nocc</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">blksize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blksize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e9</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">nocc</span><span class="o">*</span><span class="n">nvir</span><span class="o">*</span><span class="n">nvir</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">brange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">blksize</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">[:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">cderi_neg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">gijab</span> <span class="o">-=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="p">[:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi_neg</span><span class="p">)</span>
+            <span class="n">eijab</span> <span class="o">=</span> <span class="p">(</span><span class="n">eia</span><span class="p">[</span><span class="n">blk</span><span class="p">][:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">eia</span><span class="p">[</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">t2</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gijab</span> <span class="o">/</span> <span class="n">eijab</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t2</span></div>
+
+    <span class="c1">#def _project_out_subspace(self, t2, c_occ, c_vir):</span>
+    <span class="c1">#    &quot;&quot;&quot;Alternative way to implement double counting correction.&quot;&quot;&quot;</span>
+    <span class="c1">#    ovlp = self.base.get_ovlp()</span>
+    <span class="c1">#    r_occ = dot(self.cluster.c_active_occ.T, ovlp, c_occ)</span>
+    <span class="c1">#    r_vir = dot(self.cluster.c_active_vir.T, ovlp, c_vir)</span>
+    <span class="c1">#    p_occ = np.dot(r_occ, r_occ.T)</span>
+    <span class="c1">#    p_vir = np.dot(r_vir, r_vir.T)</span>
+    <span class="c1">#    t2_proj = einsum(&#39;IJAB,Ii,Jj,Aa,Bb-&gt;ijab&#39;, t2, p_occ, p_occ, p_vir, p_vir)</span>
+    <span class="c1">#    return (t2 - t2_proj)</span>
+
+<div class="viewcode-block" id="MP2_Solver.kernel"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.MP2_Solver.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eris</span> <span class="o">=</span> <span class="n">cderi</span> <span class="o">=</span> <span class="n">cderi_neg</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for AO-&gt;MO transformation: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">has_df</span><span class="p">:</span>
+                    <span class="n">cderi</span><span class="p">,</span> <span class="n">cderi_neg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cderi</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">eris</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eris</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cderi</span> <span class="o">=</span> <span class="n">cderi_neg</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">mo_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mo_energy</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for MP2 T-amplitudes: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">t2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_t2</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="n">eris</span><span class="p">,</span> <span class="n">cderi</span><span class="o">=</span><span class="n">cderi</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="o">=</span><span class="n">cderi_neg</span><span class="p">)</span>
+        <span class="c1"># Alternative double counting correction for secondary fragments:</span>
+        <span class="c1">#if self.fragment.flags.secondary_fragment:</span>
+        <span class="c1">#    f = self.fragment.flags.bath_parent_fragment</span>
+        <span class="c1">#    c_sub_occ = f.cluster.c_active_occ</span>
+        <span class="c1">#    c_sub_vir = f.cluster.c_active_vir</span>
+        <span class="c1">#    t2 = self._project_out_subspace(t2, c_sub_occ, c_sub_vir)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">t2</span> <span class="o">=</span> <span class="n">t2</span>
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">Orbitals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">mo_energy</span><span class="p">,</span> <span class="n">occ</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span> <span class="o">=</span> <span class="n">MP2_WaveFunction</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_debug_exact_wf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wf</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_debug_random_wf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">Orbitals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span><span class="p">,</span> <span class="n">occ</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">nocc_active</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">nocc</span><span class="p">,</span> <span class="n">mo</span><span class="o">.</span><span class="n">nocc</span><span class="p">,</span> <span class="n">mo</span><span class="o">.</span><span class="n">nvir</span><span class="p">,</span> <span class="n">mo</span><span class="o">.</span><span class="n">nvir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span> <span class="o">=</span> <span class="n">MP2_WaveFunction</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="UMP2_Solver"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.UMP2_Solver">[docs]</a><span class="k">class</span> <span class="nc">UMP2_Solver</span><span class="p">(</span><span class="n">MP2_Solver</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UMP2_Solver.get_eris"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.UMP2_Solver.get_eris">[docs]</a>    <span class="k">def</span> <span class="nf">get_eris</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We only need the (ov|ov), (ov|OV) and (OV|OV) blocks for MP2:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_eris_array_uhf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_occ</span><span class="p">,</span> <span class="n">mo_coeff2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_vir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UMP2_Solver.get_cderi"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.UMP2_Solver.get_cderi">[docs]</a>    <span class="k">def</span> <span class="nf">get_cderi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We only need the (L|ov) and (L|OV) blocks for MP2:</span>
+        <span class="n">c_aa</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_vir</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">c_bb</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active_vir</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">cderi_a</span><span class="p">,</span> <span class="n">cderi_neg_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_cderi</span><span class="p">(</span><span class="n">c_aa</span><span class="p">)</span>
+        <span class="n">cderi_b</span><span class="p">,</span> <span class="n">cderi_neg_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_cderi</span><span class="p">(</span><span class="n">c_bb</span><span class="p">)</span>
+        <span class="n">cderi</span> <span class="o">=</span> <span class="p">(</span><span class="n">cderi_a</span><span class="p">,</span> <span class="n">cderi_b</span><span class="p">)</span>
+        <span class="n">cderi_neg</span> <span class="o">=</span> <span class="p">(</span><span class="n">cderi_neg_a</span><span class="p">,</span> <span class="n">cderi_neg_b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cderi</span><span class="p">,</span> <span class="n">cderi_neg</span></div>
+
+<div class="viewcode-block" id="UMP2_Solver.get_mo_energy"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.UMP2_Solver.get_mo_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_mo_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fock</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">get_fock</span><span class="p">()</span>
+        <span class="n">c_act</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">c_active</span>
+        <span class="n">mo_energy_a</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ai,ab,bi-&gt;i&#39;</span><span class="p">,</span> <span class="n">c_act</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fock</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c_act</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">mo_energy_b</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ai,ab,bi-&gt;i&#39;</span><span class="p">,</span> <span class="n">c_act</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fock</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c_act</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">mo_energy_a</span><span class="p">,</span> <span class="n">mo_energy_b</span><span class="p">)</span></div>
+
+    <span class="c1">#def make_t2(self, mo_energy, eris=None, cderi=None, cderi_neg=None, blksize=None):</span>
+    <span class="c1">#    &quot;&quot;&quot;Make T2 amplitudes&quot;&quot;&quot;</span>
+    <span class="c1">#    # (ov|ov)</span>
+    <span class="c1">#    if eris is not None:</span>
+    <span class="c1">#        self.log.debugv(&quot;Making T2 amplitudes from ERIs&quot;)</span>
+    <span class="c1">#        assert (len(eris) == 3)</span>
+    <span class="c1">#        assert (eris[0].ndim == 4)</span>
+    <span class="c1">#        assert (eris[1].ndim == 4)</span>
+    <span class="c1">#        assert (eris[2].ndim == 4)</span>
+    <span class="c1">#        nocca, nvira, noccb, nvirb = eris[1].shape</span>
+    <span class="c1">#    # (L|ov)</span>
+    <span class="c1">#    elif cderi is not None:</span>
+    <span class="c1">#        self.log.debugv(&quot;Making T2 amplitudes from CD-ERIs&quot;)</span>
+    <span class="c1">#        assert (len(cderi) == 2)</span>
+    <span class="c1">#        assert (cderi[0].ndim == 3)</span>
+    <span class="c1">#        assert (cderi_neg[0] is None or cderi_neg[0].ndim == 3)</span>
+    <span class="c1">#        nocca, nvira = cderi[0].shape[1:]</span>
+    <span class="c1">#        noccb, nvirb = cderi[1].shape[1:]</span>
+    <span class="c1">#    else:</span>
+    <span class="c1">#        raise ValueError()</span>
+
+    <span class="c1">#    t2aa = np.empty((nocca, nocca, nvira, nvira))</span>
+    <span class="c1">#    t2ab = np.empty((nocca, noccb, nvira, nvirb))</span>
+    <span class="c1">#    t2bb = np.empty((noccb, noccb, nvirb, nvirb))</span>
+    <span class="c1">#    eia_a = (mo_energy[0][:nocca,None] - mo_energy[0][None,nocca:])</span>
+    <span class="c1">#    eia_b = (mo_energy[0][:nocca,None] - mo_energy[0][None,nocca:])</span>
+    <span class="c1">#    if blksize is None:</span>
+    <span class="c1">#        blksize = int(1e9 / max(nocc*nvir*nvir * 8, 1))</span>
+    <span class="c1">#    for blk in brange(0, nocc, blksize):</span>
+    <span class="c1">#        if eris is not None:</span>
+    <span class="c1">#            gijab = eris[blk].transpose(0,2,1,3)</span>
+    <span class="c1">#        else:</span>
+    <span class="c1">#            gijab = einsum(&#39;Lia,Ljb-&gt;ijab&#39;, cderi[:,blk], cderi)</span>
+    <span class="c1">#            if cderi_neg is not None:</span>
+    <span class="c1">#                gijab -= einsum(&#39;Lia,Ljb-&gt;ijab&#39;, cderi_neg[:,blk], cderi_neg)</span>
+    <span class="c1">#        eijab = (eia[blk][:,None,:,None] + eia[None,:,None,:])</span>
+    <span class="c1">#        t2[blk] = (gijab / eijab)</span>
+    <span class="c1">#    return t2</span>
+
+<div class="viewcode-block" id="UMP2_Solver.make_t2"><a class="viewcode-back" href="../../../apidoc/vayesta.solver.html#vayesta.solver.mp2.UMP2_Solver.make_t2">[docs]</a>    <span class="k">def</span> <span class="nf">make_t2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cderi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">blksize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workmem</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">1e9</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Make T2 amplitudes&quot;&quot;&quot;</span>
+        <span class="c1"># (ov|ov)</span>
+        <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">eris</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">eris</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">eris</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">eris</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">nocca</span><span class="p">,</span> <span class="n">nvira</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">noccb</span><span class="p">,</span> <span class="n">nvirb</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># (L|ov)</span>
+        <span class="k">elif</span> <span class="n">cderi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cderi</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">nocca</span><span class="p">,</span> <span class="n">nvira</span> <span class="o">=</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">noccb</span><span class="p">,</span> <span class="n">nvirb</span> <span class="o">=</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+        <span class="n">t2aa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nocca</span><span class="p">,</span> <span class="n">nocca</span><span class="p">,</span> <span class="n">nvira</span><span class="p">,</span> <span class="n">nvira</span><span class="p">))</span>
+        <span class="n">t2ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nocca</span><span class="p">,</span> <span class="n">noccb</span><span class="p">,</span> <span class="n">nvira</span><span class="p">,</span> <span class="n">nvirb</span><span class="p">))</span>
+        <span class="n">t2bb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">noccb</span><span class="p">,</span> <span class="n">noccb</span><span class="p">,</span> <span class="n">nvirb</span><span class="p">,</span> <span class="n">nvirb</span><span class="p">))</span>
+        <span class="n">eia_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">mo_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="n">nocca</span><span class="p">,</span><span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span><span class="n">nocca</span><span class="p">:])</span>
+        <span class="n">eia_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">mo_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="n">noccb</span><span class="p">,</span><span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span><span class="n">noccb</span><span class="p">:])</span>
+
+        <span class="c1"># Alpha-alpha and Alpha-beta:</span>
+        <span class="k">if</span> <span class="n">blksize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blksize_a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">workmem</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">nocca</span><span class="o">*</span><span class="n">nvira</span><span class="o">*</span><span class="n">nvira</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">blksize_a</span> <span class="o">=</span> <span class="n">blksize</span>
+        <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">brange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nocca</span><span class="p">,</span> <span class="n">blksize_a</span><span class="p">):</span>
+            <span class="c1"># Alpha-alpha</span>
+            <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">gijab</span> <span class="o">-=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">eijab</span> <span class="o">=</span> <span class="p">(</span><span class="n">eia_a</span><span class="p">[</span><span class="n">blk</span><span class="p">][:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">eia_a</span><span class="p">[</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">t2aa</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gijab</span> <span class="o">/</span> <span class="n">eijab</span><span class="p">)</span>
+            <span class="n">t2aa</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">-=</span> <span class="n">t2aa</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="c1"># Alpha-beta</span>
+            <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">gijab</span> <span class="o">-=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">eijab</span> <span class="o">=</span> <span class="p">(</span><span class="n">eia_a</span><span class="p">[</span><span class="n">blk</span><span class="p">][:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">eia_b</span><span class="p">[</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">t2ab</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gijab</span> <span class="o">/</span> <span class="n">eijab</span><span class="p">)</span>
+        <span class="c1"># Beta-beta:</span>
+        <span class="k">if</span> <span class="n">blksize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blksize_b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">workmem</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">noccb</span><span class="o">*</span><span class="n">nvirb</span><span class="o">*</span><span class="n">nvirb</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">blksize_b</span> <span class="o">=</span> <span class="n">blksize</span>
+        <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">brange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noccb</span><span class="p">,</span> <span class="n">blksize_b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">eris</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gijab</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">gijab</span> <span class="o">-=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;Lia,Ljb-&gt;ijab&#39;</span><span class="p">,</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">blk</span><span class="p">],</span> <span class="n">cderi_neg</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">eijab</span> <span class="o">=</span> <span class="p">(</span><span class="n">eia_b</span><span class="p">[</span><span class="n">blk</span><span class="p">][:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">eia_b</span><span class="p">[</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">,:])</span>
+            <span class="n">t2bb</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gijab</span> <span class="o">/</span> <span class="n">eijab</span><span class="p">)</span>
+            <span class="n">t2bb</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span> <span class="o">-=</span> <span class="n">t2bb</span><span class="p">[</span><span class="n">blk</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">t2aa</span><span class="p">,</span> <span class="n">t2ab</span><span class="p">,</span> <span class="n">t2bb</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

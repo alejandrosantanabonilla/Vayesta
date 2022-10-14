@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.core.scmf.brueckner &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../../vayesta.html">vayesta</a> &raquo;</li>
+          <li><a href="../scmf.html">vayesta.core.scmf</a> &raquo;</li>
+      <li>vayesta.core.scmf.brueckner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.core.scmf.brueckner</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="c1">#from vayesta.misc import PCDIIS</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.scmf.scmf</span> <span class="kn">import</span> <span class="n">SCMF</span>
+
+
+<div class="viewcode-block" id="Brueckner_RHF"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.scmf.html#vayesta.core.scmf.brueckner.Brueckner_RHF">[docs]</a><span class="k">class</span> <span class="nc">Brueckner_RHF</span><span class="p">(</span><span class="n">SCMF</span><span class="p">):</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Brueckner&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">diis_obj</span><span class="o">=</span><span class="s1">&#39;dm1&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diis_obj</span> <span class="o">=</span> <span class="n">diis_obj</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1">#def get_diis(self):</span>
+    <span class="c1">#    &quot;&quot;&quot;PC-DIIS&quot;&quot;&quot;</span>
+    <span class="c1">#    nocc = np.count_nonzero(self.mf.mo_occ &gt; 0)</span>
+    <span class="c1">#    diis = PCDIIS(self._mo_orig[:,:nocc].copy())</span>
+    <span class="c1">#    return diis</span>
+
+<div class="viewcode-block" id="Brueckner_RHF.get_t1"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.scmf.html#vayesta.core.scmf.brueckner.Brueckner_RHF.get_t1">[docs]</a>    <span class="k">def</span> <span class="nf">get_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get global T1 amplitudes from quantum embedding calculation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb</span><span class="o">.</span><span class="n">get_global_t1</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Brueckner_RHF.update_mo_coeff"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.scmf.html#vayesta.core.scmf.brueckner.Brueckner_RHF.update_mo_coeff">[docs]</a>    <span class="k">def</span> <span class="nf">update_mo_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">diis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get new MO coefficients.&quot;&quot;&quot;</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_t1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Norm of T1: L(2)= </span><span class="si">%.3e</span><span class="s2">  L(inf)= </span><span class="si">%.3e</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">t1</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span> <span class="o">=</span> <span class="n">t1</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">nmo</span> <span class="o">=</span> <span class="p">(</span><span class="n">nocc</span> <span class="o">+</span> <span class="n">nvir</span><span class="p">)</span>
+        <span class="n">occ</span><span class="p">,</span> <span class="n">vir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:</span><span class="n">nocc</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">nocc</span><span class="p">:]</span>
+        <span class="n">ovlp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
+        <span class="c1"># Perform DIIS in original MO basis, then transform back:</span>
+        <span class="k">if</span> <span class="n">diis</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diis_obj</span> <span class="o">==</span> <span class="s1">&#39;t1&#39;</span><span class="p">:</span>
+            <span class="n">ro</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">occ</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">vir</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">)</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">ro</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">rv</span><span class="p">)</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">diis</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">xerr</span><span class="o">=</span><span class="n">t1</span><span class="p">)</span>
+            <span class="c1">## Transform back</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">ro</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="n">mo_change</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">damping</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">vir</span><span class="p">],</span> <span class="n">t1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Change of occupied Brueckner orbitals= </span><span class="si">%.3e</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mo_change</span><span class="p">))</span>
+        <span class="n">bmo_occ</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">occ</span><span class="p">]</span> <span class="o">+</span> <span class="n">mo_change</span><span class="p">)</span>
+
+        <span class="c1"># Orthogonalize occupied orbitals</span>
+        <span class="c1"># If there was no AO-overlap matrix:  bmo_occ = np.linalg.qr(bmo_occ)[0]</span>
+        <span class="n">dm_occ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ</span><span class="p">,</span> <span class="n">bmo_occ</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bmo_occ</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="o">-</span><span class="n">nocc</span><span class="p">:]</span>
+        <span class="c1"># DIIS of occupied density</span>
+        <span class="k">if</span> <span class="n">diis</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diis_obj</span> <span class="o">==</span> <span class="s1">&#39;dm1&#39;</span><span class="p">:</span>
+            <span class="n">dm_occ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ</span><span class="p">,</span> <span class="n">bmo_occ</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">)</span>
+            <span class="n">dm_occ</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dm_occ</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">dm_occ</span> <span class="o">=</span> <span class="n">diis</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dm_occ</span><span class="p">)</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ</span><span class="p">)</span>
+            <span class="n">bmo_occ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">,</span> <span class="n">v</span><span class="p">)[:,</span><span class="o">-</span><span class="n">nocc</span><span class="p">:]</span>
+
+        <span class="c1"># Virtual space</span>
+        <span class="n">dm_vir</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">ovlp</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ</span><span class="p">,</span> <span class="n">bmo_occ</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_vir</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bmo_vir</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="o">-</span><span class="n">nvir</span><span class="p">:]</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="n">bmo_occ</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">nocc</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">bmo_vir</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">nvir</span><span class="p">)</span>
+        <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">bmo_occ</span><span class="p">,</span> <span class="n">bmo_vir</span><span class="p">))</span>
+        <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">fix_orbital_sign</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">mo_coeff</span></div></div>
+
+<div class="viewcode-block" id="Brueckner_UHF"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.scmf.html#vayesta.core.scmf.brueckner.Brueckner_UHF">[docs]</a><span class="k">class</span> <span class="nc">Brueckner_UHF</span><span class="p">(</span><span class="n">Brueckner_RHF</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Brueckner_UHF.update_mo_coeff"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.scmf.html#vayesta.core.scmf.brueckner.Brueckner_UHF.update_mo_coeff">[docs]</a>    <span class="k">def</span> <span class="nf">update_mo_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">diis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">t1a</span><span class="p">,</span> <span class="n">t1b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_t1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Norm of alpha/beta-T1 L(2)= </span><span class="si">%.3e</span><span class="s2"> </span><span class="si">%.3e</span><span class="s2"> L(inf)= </span><span class="si">%.3e</span><span class="s2"> </span><span class="si">%.3e</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">t1a</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">t1b</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">t1a</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">t1b</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">nocca</span><span class="p">,</span> <span class="n">nvira</span> <span class="o">=</span> <span class="n">t1a</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">noccb</span><span class="p">,</span> <span class="n">nvirb</span> <span class="o">=</span> <span class="n">t1b</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">nmoa</span><span class="p">,</span> <span class="n">nmob</span> <span class="o">=</span> <span class="n">nocca</span> <span class="o">+</span> <span class="n">nvira</span><span class="p">,</span> <span class="n">noccb</span> <span class="o">+</span> <span class="n">nvirb</span>
+        <span class="n">occa</span><span class="p">,</span> <span class="n">vira</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:</span><span class="n">nocca</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">nocca</span><span class="p">:]</span>
+        <span class="n">occb</span><span class="p">,</span> <span class="n">virb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:</span><span class="n">noccb</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">noccb</span><span class="p">:]</span>
+        <span class="n">ovlp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
+
+        <span class="c1"># Perform DIIS in original MO basis, then transform back:</span>
+        <span class="k">if</span> <span class="n">diis</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diis_obj</span> <span class="o">==</span> <span class="s1">&#39;t1&#39;</span><span class="p">:</span>
+            <span class="n">roa</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">occa</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">rob</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">occb</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">rva</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">vira</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">rvb</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">virb</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">t1a</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">roa</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">t1a</span><span class="p">,</span> <span class="n">rva</span><span class="p">)</span>
+            <span class="n">t1b</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">rob</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">t1b</span><span class="p">,</span> <span class="n">rvb</span><span class="p">)</span>
+            <span class="n">t1a</span><span class="p">,</span> <span class="n">t1b</span> <span class="o">=</span> <span class="n">diis</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarry</span><span class="p">((</span><span class="n">t1a</span><span class="p">,</span><span class="n">t1b</span><span class="p">)),</span> <span class="n">xerr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">((</span><span class="n">t1a</span><span class="p">,</span><span class="n">t1b</span><span class="p">)))</span>
+            <span class="c1">#t1b = diis.update(t1b, xerr=t1b)</span>
+            <span class="c1">## Transform back</span>
+            <span class="n">t1a</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">roa</span><span class="p">,</span> <span class="n">t1a</span><span class="p">,</span> <span class="n">rva</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">t1b</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">rob</span><span class="p">,</span> <span class="n">t1b</span><span class="p">,</span> <span class="n">rvb</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="n">mo_change_a</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">damping</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">vira</span><span class="p">],</span> <span class="n">t1a</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">mo_change_b</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">damping</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">virb</span><span class="p">],</span> <span class="n">t1b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Change of alpha/beta occupied Brueckner orbitals= </span><span class="si">%.3e</span><span class="s2"> </span><span class="si">%.3e</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mo_change_a</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mo_change_b</span><span class="p">))</span>
+        <span class="n">bmo_occ_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">occa</span><span class="p">]</span> <span class="o">+</span> <span class="n">mo_change_a</span><span class="p">)</span>
+        <span class="n">bmo_occ_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">occb</span><span class="p">]</span> <span class="o">+</span> <span class="n">mo_change_b</span><span class="p">)</span>
+
+        <span class="c1"># Orthogonalize occupied orbitals</span>
+        <span class="c1"># If there was no AO-overlap matrix:  bmo_occ = np.linalg.qr(bmo_occ)[0]</span>
+        <span class="n">dm_occ_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_a</span><span class="p">,</span> <span class="n">bmo_occ_a</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">dm_occ_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_b</span><span class="p">,</span> <span class="n">bmo_occ_b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">ea</span><span class="p">,</span> <span class="n">va</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ_a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">eb</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ_b</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bmo_occ_a</span> <span class="o">=</span> <span class="n">va</span><span class="p">[:,</span><span class="o">-</span><span class="n">nocca</span><span class="p">:]</span>
+        <span class="n">bmo_occ_b</span> <span class="o">=</span> <span class="n">vb</span><span class="p">[:,</span><span class="o">-</span><span class="n">noccb</span><span class="p">:]</span>
+
+        <span class="c1"># DIIS of occupied density</span>
+        <span class="k">if</span> <span class="n">diis</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diis_obj</span> <span class="o">==</span> <span class="s1">&#39;dm1&#39;</span><span class="p">:</span>
+            <span class="n">dm_occ_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_a</span><span class="p">,</span> <span class="n">bmo_occ_a</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">dm_occ_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_b</span><span class="p">,</span> <span class="n">bmo_occ_b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">rb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ovlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">dm_occ_a</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">ra</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dm_occ_a</span><span class="p">,</span> <span class="n">ra</span><span class="p">)</span>
+            <span class="n">dm_occ_b</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">rb</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dm_occ_b</span><span class="p">,</span> <span class="n">rb</span><span class="p">)</span>
+            <span class="c1">#dm_occ_a = diis.update(dm_occ_a)</span>
+            <span class="c1">#dm_occ_b = diis.update(dm_occ_b)</span>
+            <span class="n">dm_occ_a</span><span class="p">,</span> <span class="n">dm_occ_b</span> <span class="o">=</span> <span class="n">diis</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">((</span><span class="n">dm_occ_a</span><span class="p">,</span> <span class="n">dm_occ_b</span><span class="p">)))</span>
+            <span class="n">ea</span><span class="p">,</span> <span class="n">va</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ_a</span><span class="p">)</span>
+            <span class="n">eb</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_occ_b</span><span class="p">)</span>
+            <span class="n">bmo_occ_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">va</span><span class="p">)[:,</span><span class="o">-</span><span class="n">nocca</span><span class="p">:]</span>
+            <span class="n">bmo_occ_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mo_orig</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vb</span><span class="p">)[:,</span><span class="o">-</span><span class="n">noccb</span><span class="p">:]</span>
+
+        <span class="c1"># Virtual space</span>
+        <span class="n">dm_vir_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">ovlp</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_a</span><span class="p">,</span> <span class="n">bmo_occ_a</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">dm_vir_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">ovlp</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bmo_occ_b</span><span class="p">,</span> <span class="n">bmo_occ_b</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">ea</span><span class="p">,</span> <span class="n">va</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_vir_a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">eb</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm_vir_b</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">ovlp</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bmo_vir_a</span> <span class="o">=</span> <span class="n">va</span><span class="p">[:,</span><span class="o">-</span><span class="n">nvira</span><span class="p">:]</span>
+        <span class="n">bmo_vir_b</span> <span class="o">=</span> <span class="n">vb</span><span class="p">[:,</span><span class="o">-</span><span class="n">nvirb</span><span class="p">:]</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="n">bmo_occ_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">nocca</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">bmo_vir_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">nvira</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">bmo_occ_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">noccb</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">bmo_vir_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">nvirb</span><span class="p">)</span>
+        <span class="n">mo_coeff_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">bmo_occ_a</span><span class="p">,</span> <span class="n">bmo_vir_a</span><span class="p">))</span>
+        <span class="n">mo_coeff_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">bmo_occ_b</span><span class="p">,</span> <span class="n">bmo_vir_b</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">mo_coeff_a</span><span class="p">,</span> <span class="n">mo_coeff_b</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

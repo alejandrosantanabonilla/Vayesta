@@ -1,0 +1,101 @@
+vayesta.solver
+==============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   vayesta.solver.eb_fci
+
+Submodules
+----------
+
+vayesta.solver.ccsd
+-------------------
+
+.. automodule:: vayesta.solver.ccsd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.cisd
+-------------------
+
+.. automodule:: vayesta.solver.cisd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.coupling
+-----------------------
+
+.. automodule:: vayesta.solver.coupling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.dump
+-------------------
+
+.. automodule:: vayesta.solver.dump
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.ebccsd
+---------------------
+
+.. automodule:: vayesta.solver.ebccsd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.ebfci
+--------------------
+
+.. automodule:: vayesta.solver.ebfci
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.fci
+------------------
+
+.. automodule:: vayesta.solver.fci
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.mp2
+------------------
+
+.. automodule:: vayesta.solver.mp2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.solver
+---------------------
+
+.. automodule:: vayesta.solver.solver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+vayesta.solver.tccsd
+--------------------
+
+.. automodule:: vayesta.solver.tccsd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: vayesta.solver
+   :members:
+   :undoc-members:
+   :show-inheritance:

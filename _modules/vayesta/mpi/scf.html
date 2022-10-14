@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.mpi.scf &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../vayesta.html">vayesta</a> &raquo;</li>
+          <li><a href="../mpi.html">vayesta.mpi</a> &raquo;</li>
+      <li>vayesta.mpi.scf</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.mpi.scf</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">vayesta</span>
+<span class="kn">import</span> <span class="nn">vayesta.core</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="scf_with_mpi"><a class="viewcode-back" href="../../../apidoc/vayesta.mpi.html#vayesta.mpi.scf.scf_with_mpi">[docs]</a><span class="k">def</span> <span class="nf">scf_with_mpi</span><span class="p">(</span><span class="n">mpi</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">mpi_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Use to run SCF only on the master node and broadcast result afterwards.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mf</span>
+
+    <span class="n">bcast</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">bcast</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">mpi_rank</span><span class="p">)</span>
+    <span class="n">kernel_orig</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">log</span> <span class="ow">or</span> <span class="n">mpi</span><span class="o">.</span><span class="n">log</span> <span class="ow">or</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">mpi_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">mpi_rank</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MPI rank= </span><span class="si">%3d</span><span class="s2"> is running SCF&quot;</span><span class="p">,</span> <span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for SCF: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">kernel_orig</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MPI rank= </span><span class="si">%3d</span><span class="s2"> finished SCF&quot;</span><span class="p">,</span> <span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># Generate auxiliary cell, compensation basis etc,..., but not 3c integrals:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;with_df&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">auxcell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">with_j3c</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MPI rank= </span><span class="si">%3d</span><span class="s2"> is waiting for SCF results&quot;</span><span class="p">,</span> <span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+        <span class="c1"># Broadcast results</span>
+        <span class="k">with</span> <span class="n">log_time</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">timing</span><span class="p">,</span> <span class="s2">&quot;Time for MPI broadcast of SCF results: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;with_df&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">_cderi</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mo_energy</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_energy</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="c1"># TODO: Distribute diagonalization over k-points</span>
+    <span class="c1">#def mpi_eig(self, h_kpts, s_kpts):</span>
+    <span class="c1">#    nkpts = len(h_kpts)</span>
+    <span class="c1">#    #mo_energy = []</span>
+    <span class="c1">#    #mo_coeff = []</span>
+
+    <span class="c1">#    # Broadcast hcore</span>
+    <span class="c1">#    send = [[] for i in len(mpi)]</span>
+    <span class="c1">#    for k in range(nkpts):</span>
+    <span class="c1">#        send[k].append(h_kpts)</span>
+    <span class="c1">#    h_list = mpi.world.scatter(send, root=mpi_rank)</span>
+
+    <span class="c1">#    # Broadcast overlap</span>
+    <span class="c1">#    send = [[] for i in len(mpi)]</span>
+    <span class="c1">#    for k in range(nkpts):</span>
+    <span class="c1">#        send[k].append(s_kpts)</span>
+    <span class="c1">#    s_list = mpi.world.scatter(send, root=mpi_rank)</span>
+
+    <span class="c1">#    # Diagonalize locally</span>
+    <span class="c1">#    mo_energy_list, mo_coeff_list = eig_orig(h_list, s_list)</span>
+
+    <span class="c1">#    # Gather results</span>
+    <span class="c1">#    mo_energy = mpi.world.gather(mo_energy_list, root=mpi_rank)</span>
+    <span class="c1">#    mo_coeff = mpi.world.gather(mo_coeff_list, root=mpi_rank)</span>
+    <span class="c1">#    return mo_energy, mo_coeff</span>
+
+    <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">mpi_kernel</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">with_mpi</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="n">mf</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

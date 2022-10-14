@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vayesta.core.symmetry.operation &mdash; Vayesta 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Vayesta
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart/index.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../faq/index.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../apidoc/modules.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Vayesta</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../../vayesta.html">vayesta</a> &raquo;</li>
+      <li>vayesta.core.symmetry.operation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vayesta.core.symmetry.operation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span>
+
+<span class="kn">import</span> <span class="nn">pyscf</span>
+<span class="kn">import</span> <span class="nn">pyscf.symm</span>
+
+<span class="kn">import</span> <span class="nn">vayesta</span>
+<span class="kn">import</span> <span class="nn">vayesta.core</span>
+<span class="kn">from</span> <span class="nn">vayesta.core.util</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">BOHR</span> <span class="o">=</span> <span class="mf">0.529177210903</span>
+
+<div class="viewcode-block" id="SymmetryOperation"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryOperation">[docs]</a><span class="k">class</span> <span class="nc">SymmetryOperation</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">mol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xtol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">xtol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">natom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">natom</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nao</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">nao</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">AbstractMethodError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SymmetryIdentity"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryIdentity">[docs]</a><span class="k">class</span> <span class="nc">SymmetryIdentity</span><span class="p">(</span><span class="n">SymmetryOperation</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span></div>
+
+<div class="viewcode-block" id="SymmetryRotation"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryRotation">[docs]</a><span class="k">class</span> <span class="nc">SymmetryRotation</span><span class="p">(</span><span class="n">SymmetryOperation</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">rotvec</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Bohr&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rotvec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;ang&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">/</span><span class="n">BOHR</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_atom_reorder</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Symmetry </span><span class="si">%s</span><span class="s2"> not found&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ao_reorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">angular_rotmats</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">symm</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">_ao_rotation_matrices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Rotation(</span><span class="si">%g</span><span class="s2">,</span><span class="si">%g</span><span class="s2">,</span><span class="si">%g</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotvec</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymmetryRotation.as_matrix"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryRotation.as_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">as_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">spatial</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">Rotation</span><span class="o">.</span><span class="n">from_rotvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotvec</span><span class="p">)</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axis</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">a</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">])</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Reorder AOs according to new atomic center</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span><span class="p">]</span>
+        <span class="c1"># Rotate between orbitals in p,d,f,... shells</span>
+        <span class="n">ao_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">ao_loc</span>
+        <span class="n">ao_start</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">bas</span><span class="p">,</span> <span class="n">ao_end</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ao_loc</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">bas</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ao_start</span> <span class="o">=</span> <span class="n">ao_end</span>
+                <span class="k">continue</span>
+            <span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angular_rotmats</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">ao_end</span> <span class="o">-</span> <span class="n">ao_start</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">rot</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+            <span class="n">slc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">ao_start</span><span class="p">:</span><span class="n">ao_end</span><span class="p">]</span>
+            <span class="c1">#log.debugv(&quot;bas= %d, ao_start= %d, ao_end= %d, l= %d, diag(rot)= %r&quot;,</span>
+            <span class="c1">#    bas, ao_start, ao_end, l, np.diag(rot))</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">slc</span><span class="p">]</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;x...,xy-&gt;y...&#39;</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">slc</span><span class="p">],</span> <span class="n">rot</span><span class="p">)</span>
+            <span class="n">ao_start</span> <span class="o">=</span> <span class="n">ao_end</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">a</span>
+
+<div class="viewcode-block" id="SymmetryRotation.get_atom_reorder"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryRotation.get_atom_reorder">[docs]</a>    <span class="k">def</span> <span class="nf">get_atom_reorder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reordering of atoms for a given rotation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        reorder: list</span>
+<span class="sd">        inverse: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reorder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">atom0</span><span class="p">,</span> <span class="n">r0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()):</span>
+            <span class="n">r1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot</span><span class="p">,</span> <span class="p">(</span><span class="n">r0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+            <span class="n">atom1</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">get_closest_atom</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xtol</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">compare_atoms</span><span class="p">(</span><span class="n">atom0</span><span class="p">,</span> <span class="n">atom1</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">reorder</span><span class="p">[</span><span class="n">atom1</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom0</span>
+            <span class="n">inverse</span><span class="p">[</span><span class="n">atom0</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom1</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">reorder</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">inverse</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">)[</span><span class="n">reorder</span><span class="p">][</span><span class="n">inverse</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">reorder</span><span class="p">,</span> <span class="n">inverse</span></div>
+
+<div class="viewcode-block" id="SymmetryRotation.get_ao_reorder"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryRotation.get_ao_reorder">[docs]</a>    <span class="k">def</span> <span class="nf">get_ao_reorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_reorder</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">aoslice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">aoslice_by_atom</span><span class="p">()[:,</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">reorder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nao</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nao</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom0</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">):</span>
+            <span class="n">atom1</span> <span class="o">=</span> <span class="n">atom_reorder</span><span class="p">[</span><span class="n">atom0</span><span class="p">]</span>
+            <span class="n">aos0</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">aoslice</span><span class="p">[</span><span class="n">atom0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">aoslice</span><span class="p">[</span><span class="n">atom0</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">aos1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">aoslice</span><span class="p">[</span><span class="n">atom1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">aoslice</span><span class="p">[</span><span class="n">atom1</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">reorder</span><span class="p">[</span><span class="n">aos0</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">aos0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">aos1</span>
+            <span class="n">inverse</span><span class="p">[</span><span class="n">aos1</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">aos1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">aos0</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">reorder</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">inverse</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nao</span><span class="p">)[</span><span class="n">reorder</span><span class="p">][</span><span class="n">inverse</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nao</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">reorder</span><span class="p">,</span> <span class="n">inverse</span></div></div>
+
+
+<div class="viewcode-block" id="SymmetryTranslation"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryTranslation">[docs]</a><span class="k">class</span> <span class="nc">SymmetryTranslation</span><span class="p">(</span><span class="n">SymmetryOperation</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">vector</span><span class="p">,</span> <span class="n">boundary</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_reorder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ao_reorder</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">boundary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">boundary</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;boundary&#39;</span><span class="p">,</span> <span class="s1">&#39;PBC&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">boundary</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="p">[</span><span class="n">boundary</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">boundary</span> <span class="o">=</span> <span class="p">[</span><span class="n">boundary</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boundary</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;PBC&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="n">boundary</span>
+
+        <span class="c1"># Atom reorder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder_phases</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder_phases</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atom_reorder</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder_phases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_atom_reorder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span> <span class="o">=</span> <span class="n">atom_reorder</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># AO reorder</span>
+        <span class="k">if</span> <span class="n">ao_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ao_reorder</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder_phases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ao_reorder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span> <span class="o">=</span> <span class="n">ao_reorder</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Translation(</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply symmetry operation along AO axis.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axis</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">a</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder_phases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">bc</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">axis</span><span class="o">*</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span> <span class="o">+</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndim</span><span class="o">-</span><span class="n">axis</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao_reorder_phases</span><span class="p">[</span><span class="n">bc</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SymmetryTranslation.inverse"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryTranslation.inverse">[docs]</a>    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">,</span> <span class="n">boundary</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary</span><span class="p">,</span> <span class="n">atom_reorder</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lattice_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inv_lattice_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary_phases</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;pbc&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vector_xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translation vector in real-space coordinates (unit = Bohr).&quot;&quot;&quot;</span>
+        <span class="n">latvecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice_vectors</span>
+        <span class="n">vector_xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vector_xyz</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverse_atom_reorder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymmetryTranslation.get_atom_reorder"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryTranslation.get_atom_reorder">[docs]</a>    <span class="k">def</span> <span class="nf">get_atom_reorder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reordering of atoms for a given translation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        reorder: list</span>
+<span class="sd">        inverse: list</span>
+<span class="sd">        phases: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atom_coords_abc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_lattice_vectors</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_atom_at</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;pos in internal coordinates.&quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dz</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span> <span class="k">continue</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dy</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span> <span class="k">continue</span>
+                <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">])</span>
+                <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_phases</span><span class="p">[</span><span class="n">dr</span><span class="o">!=</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">atom_coords_abc</span> <span class="o">+</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">dists</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xtol</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">idx</span><span class="p">,</span> <span class="n">phase</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="n">reorder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">phases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">,),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom0</span><span class="p">,</span> <span class="n">coords0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atom_coords_abc</span><span class="p">):</span>
+            <span class="n">atom1</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="n">get_atom_at</span><span class="p">(</span><span class="n">coords0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">atom1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">compare_atoms</span><span class="p">(</span><span class="n">atom0</span><span class="p">,</span> <span class="n">atom1</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">reorder</span><span class="p">[</span><span class="n">atom1</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom0</span>
+            <span class="n">inverse</span><span class="p">[</span><span class="n">atom0</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom1</span>
+            <span class="n">phases</span><span class="p">[</span><span class="n">atom0</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">reorder</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">inverse</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">phases</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">)[</span><span class="n">reorder</span><span class="p">][</span><span class="n">inverse</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">reorder</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">phases</span></div>
+
+<div class="viewcode-block" id="SymmetryTranslation.get_ao_reorder"><a class="viewcode-back" href="../../../../apidoc/vayesta.core.symmetry.html#vayesta.core.symmetry.operation.SymmetryTranslation.get_ao_reorder">[docs]</a>    <span class="k">def</span> <span class="nf">get_ao_reorder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_reorder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_reorder_phases</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atom_reorder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder</span>
+        <span class="k">if</span> <span class="n">atom_reorder_phases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atom_reorder_phases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_reorder_phases</span>
+        <span class="k">if</span> <span class="n">atom_reorder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">aoslice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">aoslice_by_atom</span><span class="p">()[:,</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">reorder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nao</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nao</span><span class="p">,),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">atom_reorder_phases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">phases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nao</span><span class="p">,),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phases</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">atom0</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">natom</span><span class="p">):</span>
+            <span class="n">atom1</span> <span class="o">=</span> <span class="n">atom_reorder</span><span class="p">[</span><span class="n">atom0</span><span class="p">]</span>
+            <span class="n">aos0</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">aoslice</span><span class="p">[</span><span class="n">atom0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">aoslice</span><span class="p">[</span><span class="n">atom0</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">aos1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">aoslice</span><span class="p">[</span><span class="n">atom1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">aoslice</span><span class="p">[</span><span class="n">atom1</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">reorder</span><span class="p">[</span><span class="n">aos0</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">aos0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">aos1</span>
+            <span class="n">inverse</span><span class="p">[</span><span class="n">aos1</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">aos1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">aos0</span>
+            <span class="k">if</span> <span class="n">atom_reorder_phases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">phases</span><span class="p">[</span><span class="n">aos0</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">aos0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span>  <span class="n">atom_reorder_phases</span><span class="p">[</span><span class="n">atom1</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">reorder</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">inverse</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">atom_reorder_phases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">phases</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nao</span><span class="p">)[</span><span class="n">reorder</span><span class="p">][</span><span class="n">inverse</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nao</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">reorder</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">phases</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">test_translation</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">pyscf</span>
+        <span class="kn">import</span> <span class="nn">pyscf.pbc</span>
+        <span class="kn">import</span> <span class="nn">pyscf.pbc.gto</span>
+        <span class="kn">import</span> <span class="nn">pyscf.pbc.scf</span>
+        <span class="kn">import</span> <span class="nn">pyscf.pbc.tools</span>
+        <span class="kn">import</span> <span class="nn">pyscf.pbc.df</span>
+
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">pbc</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
+        <span class="n">cell</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">cell</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;He 0 0 0&#39;</span>
+        <span class="n">cell</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;Bohr&#39;</span>
+        <span class="n">cell</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;def2-svp&#39;</span>
+        <span class="c1">#cell.basis = &#39;sto-3g&#39;</span>
+        <span class="n">cell</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="c1">#cell.dimension = 2</span>
+
+        <span class="n">sc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">pbc</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">super_cell</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">sc</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Translation</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">pbc</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">GDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s1">&#39;def2-svp-ri&#39;</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+        <span class="c1">#print(t.ao_reorder)</span>
+        <span class="c1">#aux_reorder = t.get_ao_reorder(cell=df.auxcell)[0]</span>
+        <span class="c1">#print(aux_reorder)</span>
+        <span class="n">taux</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">change_cell</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">auxcell</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">ao_reorder</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">taux</span><span class="o">.</span><span class="n">ao_reorder</span><span class="p">)</span>
+
+        <span class="c1">#print(trans.atom_reorder)</span>
+        <span class="c1">#print(trans.ao_reorder)</span>
+        <span class="c1">#trans = Translation(cell, [0,1/5,2/3])</span>
+        <span class="c1">#trans = Translation(cell, [0,3/5,2/3])</span>
+
+        <span class="c1">#mo0 = np.eye(cell.nao)</span>
+        <span class="c1">#mo1 = trans(mo0)</span>
+
+    <span class="k">def</span> <span class="nf">test_rotation</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">pyscf</span>
+        <span class="kn">import</span> <span class="nn">pyscf.gto</span>
+        <span class="kn">import</span> <span class="nn">vayesta.misc</span>
+        <span class="kn">import</span> <span class="nn">vayesta.misc.molecules</span>
+
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="n">vayesta</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">molecules</span><span class="o">.</span><span class="n">arene</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+        <span class="n">vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">SymmetryRotation</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">vec</span><span class="p">)</span>
+
+        <span class="n">reorder</span><span class="p">,</span> <span class="n">inv</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_atom_reorder</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">reorder</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">inv</span><span class="p">)</span>
+
+
+
+    <span class="n">test_rotation</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
