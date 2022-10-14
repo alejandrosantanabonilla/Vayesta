@@ -55,7 +55,7 @@ jobs:
              mkdir data_1
              mv *.zip data_1/
              cd data_1
-             git clone -b stat https://github.com/alejandrosantanabonilla/Vayesta
+             git clone -b stats https://github.com/alejandrosantanabonilla/Vayesta
              mv *.zip Vayesta/statistics
              
       - name: Commit files
