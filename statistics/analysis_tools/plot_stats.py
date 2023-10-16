@@ -4,7 +4,6 @@ import os
 import tempfile
 import matplotlib.pyplot as plt
 
-
 def open_zip_files(folder_path):
   """Opens all zip files in the given folder.
 
@@ -71,18 +70,47 @@ def plot_results(json_data, unique_name):
   plt.savefig(os.path.join(os.getcwd(),unique_name+".png"))
   plt.clf()
 
+def cumulative_stats(zip_files, f):
+  """ Cummulative distribution of views for a GitHub  
+      traffic repository stats.
+  """
+  import numpy as np
+  
+  total_views=[]
+  unique_views=[]
+  times=[]
+  for i in range(len(zip_files)):
+    json_data=json.load(f[i])
+    total_views.append(json_data["count"])
+    unique_views.append(json_data["uniques"])
+    times.append(remove_time_information(json_data["views"][0]["timestamp"]))
+
+  
+  tot_views_sum=np.cumsum(np.array(total_views))
+  unq_views_sum=np.cumsum(np.array(unique_views))
+  times_rev=times[::-1]
+  
+  plt.bar(times_rev, tot_views_sum, color="b", label="Total")
+  plt.bar(times_rev, unq_views_sum, color="r", label="Unique")
+  plt.xlabel("Time interval")
+  plt.xticks(rotation=45)
+  plt.ylabel("Counts")
+  plt.title("Vayesta Traffic stats")
+  plt.legend()
+  plt.tight_layout()
+  plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
+
 def processing_files(f, unique_name, i):
     json_data=json.load(f[i])
     plot_results(json_data, unique_name[i])
     print ("Result {}.png has been saved".format(unique_name[i]))
   
-def stats_analysis():
-  """Opens all zip files and the JSON file in the given folder."""
+def stats_analysis(cumulative=True):
+  """Opens all zip files and the JSON file in the 
+     given folder.
+  """
 
   folder_path = os.path.join(os.getcwd())
-  bad_folder=os.path.join(folder_path,"vayesta.master.13102022.zip")
-  os.remove(bad_folder)
-
   zip_files = open_zip_files(folder_path) 
   files_zip=[values.namelist()[3] for idx, values in enumerate(zip_files)]
 
@@ -90,9 +118,12 @@ def stats_analysis():
   unique_name=[os.path.split(zip_files[idx].filename)[1].split(".")[2]
                for idx, values in enumerate(zip_files)]
 
-  for i in range(len(zip_files)):
-    processing_files(f, unique_name,i)
+  if cumulative:
+    cumulative_stats(zip_files, f)
 
+  if not cumulative:
+    for i in range(len(zip_files)):
+      processing_files(f, unique_name,i)
   
 if __name__ == "__main__":
   stats_analysis()
