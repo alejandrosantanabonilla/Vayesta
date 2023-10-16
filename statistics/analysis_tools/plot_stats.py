@@ -80,6 +80,9 @@ def stats_analysis():
   """Opens all zip files and the JSON file in the given folder."""
 
   folder_path = os.path.join(os.getcwd())
+  bad_folder=os.path.join(folder_path,"vayesta.master.13102022.zip")
+  os.remove(bad_folder)
+
   zip_files = open_zip_files(folder_path) 
   files_zip=[values.namelist()[3] for idx, values in enumerate(zip_files)]
 
