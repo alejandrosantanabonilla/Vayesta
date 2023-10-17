@@ -1,7 +1,6 @@
 import zipfile
 import json
 import os
-import tempfile
 import matplotlib.pyplot as plt
 
 def open_zip_files(folder_path):
@@ -41,11 +40,19 @@ def remove_time_information(date_string):
   return date.strftime("%Y-%m-%d")
 
 def sorting_list(my_list):
-  
+  """Function to sort a list based on the date from oldest to newest entry.
+
+  Args:
+    my_list: A list of tuples representing a date in the 
+    format 2022-10-03T00:00:00Z and a number of clones/views.
+
+  Returns:
+     An order list of tuples based on entry dates.
+  """
   unique=list(set([i for i in my_list]))
   return sorted(unique, key=lambda x: x[0])
   
-def plot_results(json_data, unique_name):
+def plot_results(json_data, unique_name, variable):
   """ Plotting all results of GitHub's view's .JSON files.
 
   Args:
@@ -60,7 +67,7 @@ def plot_results(json_data, unique_name):
   counts = []
   unique=[]
 
-  for person in json_data["views"]:
+  for person in json_data["".join([variable,".json"])]:
     times.append(remove_time_information(person["timestamp"]))
     counts.append(person["count"])
     unique.append(person["uniques"])
@@ -70,13 +77,13 @@ def plot_results(json_data, unique_name):
   plt.xlabel("Date")
   plt.xticks(rotation=45)
   plt.ylabel("Counts")
-  plt.title("Vayesta Traffic stats")
+  plt.title(os.join(["Vayesta Traffic"," ", "variable"," ","stats"]))
   plt.legend()
   plt.tight_layout()
-  plt.savefig(os.path.join(os.getcwd(),unique_name+".png"))
+  plt.savefig(os.path.join(os.getcwd(),"".join([unique_name,".png"])))
   plt.clf()
 
-def cumulative_stats(zip_files, f):
+def cumulative_stats(zip_files, f, variable):
   """ Cummulative distribution of views for a GitHub  
       traffic repository stats.
   """
@@ -89,7 +96,7 @@ def cumulative_stats(zip_files, f):
     json_data=json.load(f[i])
     total_views.append(json_data["count"])
     unique_views.append(json_data["uniques"])
-    times.append(remove_time_information(json_data["views"][0]["timestamp"]))
+    times.append(remove_time_information(json_data[variable][0]["timestamp"]))
 
   #Cumulative total views
   tot_views_list = sorting_list(list(zip(times, total_views)))
@@ -110,38 +117,38 @@ def cumulative_stats(zip_files, f):
   plt.xlabel("Time interval")
   plt.xticks(rotation=45)
   plt.ylabel("Counts")
-  plt.title("Vayesta Traffic (views) stats")
+  plt.title("".join(["Vayesta Traffic", " ","stats", "(" ,str(variable), ")"]))
   plt.legend()
   plt.tight_layout()
-  plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
+  plt.savefig(os.path.join(os.getcwd(),"".join(["cumulative","_",str(variable),"_","counts",".png"])))
 
 def processing_files(f, unique_name, i):
     json_data=json.load(f[i])
     plot_results(json_data, unique_name[i])
     print ("Result {}.png has been saved".format(unique_name[i]))
   
-def stats_analysis(cumulative=True):
+def stats_analysis(variable, cumulative=True):
   """Opens all zip files and the JSON file in the 
      given folder.
   """
 
   folder_path = os.path.join(os.getcwd())
-  #bad_folder=os.path.join(folder_path,"vayesta.master.13102022.zip")
-  #os.remove(bad_folder)
   
   zip_files = open_zip_files(folder_path) 
   files_zip=[values.namelist()[3] for idx, values in enumerate(zip_files)]
 
-  f=[zip_files[idx].open("data/views.json") for idx, values in enumerate(zip_files)]
+  total_path=os.path.join("data","".join([variable,".json"]))
+  f=[zip_files[idx].open(total_path) for idx, values in enumerate(zip_files)]
   unique_name=[os.path.split(zip_files[idx].filename)[1].split(".")[2]
                for idx, values in enumerate(zip_files)]
 
   if cumulative:
-    cumulative_stats(zip_files, f)
+    cumulative_stats(zip_files, f, variable)
 
   if not cumulative:
     for i in range(len(zip_files)):
       processing_files(f, unique_name,i)
   
 if __name__ == "__main__":
-  stats_analysis()
+  stats_analysis(variable="clones")
+
