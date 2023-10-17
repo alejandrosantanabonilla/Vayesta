@@ -113,8 +113,7 @@ def cumulative_stats(zip_files, f):
   plt.title("Vayesta Traffic stats")
   plt.legend()
   plt.tight_layout()
-  plt.show()
-  #plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
+  plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
 
 def processing_files(f, unique_name, i):
     json_data=json.load(f[i])
