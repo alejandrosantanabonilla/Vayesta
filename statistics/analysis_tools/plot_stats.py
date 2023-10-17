@@ -27,7 +27,8 @@ def remove_time_information(date_string):
      format 2022-10-03T00:00:00Z.
 
   Args:
-    date_string: A string representing a date in the format 2022-10-03T00:00:00Z.
+    date_string: A string representing a date in the 
+    format 2022-10-03T00:00:00Z.
 
   Returns:
      A string representing the date without the time information, 
@@ -39,6 +40,11 @@ def remove_time_information(date_string):
   date = date_time.date()
   return date.strftime("%Y-%m-%d")
 
+def sorting_list(my_list):
+  
+  unique=list(set([i for i in my_list]))
+  return sorted(unique, key=lambda x: x[0])
+  
 def plot_results(json_data, unique_name):
   """ Plotting all results of GitHub's view's .JSON files.
 
@@ -85,20 +91,30 @@ def cumulative_stats(zip_files, f):
     unique_views.append(json_data["uniques"])
     times.append(remove_time_information(json_data["views"][0]["timestamp"]))
 
+  #Cumulative total views
+  tot_views_list = sorting_list(list(zip(times, total_views)))
+  time, tot_views = zip(*tot_views_list)  
+  tot_views_sum=np.cumsum(np.array(tot_views))
   
-  tot_views_sum=np.cumsum(np.array(total_views))
-  unq_views_sum=np.cumsum(np.array(unique_views))
-  times_rev=times[::-1]
+
+  #Unique views
+  uniq_list=sorting_list(list(zip(times, unique_views)))
+  time_same, unq_views = zip(*uniq_list)  
+  unq_views_sum=np.cumsum(np.array(unq_views))
   
-  plt.bar(times_rev, tot_views_sum, color="b", label="Total")
-  plt.bar(times_rev, unq_views_sum, color="r", label="Unique")
+  #Organised time intervals of the artifacts from GitHub
+  times=np.array(time)
+  
+  plt.bar(times, tot_views_sum, color="b", label="Total")
+  plt.bar(times, unq_views_sum, color="r", label="Unique")
   plt.xlabel("Time interval")
   plt.xticks(rotation=45)
   plt.ylabel("Counts")
   plt.title("Vayesta Traffic stats")
   plt.legend()
   plt.tight_layout()
-  plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
+  plt.show()
+  #plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
 
 def processing_files(f, unique_name, i):
     json_data=json.load(f[i])
