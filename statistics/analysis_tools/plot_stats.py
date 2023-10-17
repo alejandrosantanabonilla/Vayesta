@@ -110,7 +110,7 @@ def cumulative_stats(zip_files, f):
   plt.xlabel("Time interval")
   plt.xticks(rotation=45)
   plt.ylabel("Counts")
-  plt.title("Vayesta Traffic stats")
+  plt.title("Vayesta Traffic (views) stats")
   plt.legend()
   plt.tight_layout()
   plt.savefig(os.path.join(os.getcwd(),"cumulative_counts.png"))
